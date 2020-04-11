@@ -39,6 +39,7 @@ func buildState(nums []int) *State {
 // TODO: not tested yet
 func findNextStates(s *State) []*State {
 	states := make([]*State, 0)
+	// not 7 part:
 	for _, p := range s.zeroPos {
 		// for every blank space
 		pos := findAjacentPos(p)
@@ -64,6 +65,10 @@ func findNextStates(s *State) []*State {
 			}
 		}
 	}
+	// 7 part:
+	// sevenPos := findSevenAjacentPos(s.numberPos[7])
+	// var isValid bool = true
+	// s.posNumber[]
 	return states
 }
 
@@ -82,6 +87,28 @@ func findAjacentPos(p Position) []Position {
 		pos = append(pos, Position{p.x, p.y + 1})
 	}
 	return pos
+}
+
+// TODO: not tested
+func findSevenAjacentPos(seven Position) [][]Position {
+	ajacentPos := make([][]Position, 0)
+	l1 := Position{x: seven.x - 1, y: seven.y}
+	l2 := Position{x: seven.x - 2, y: seven.y - 1}
+	lc := append(make([]Position, 0), l1, l2)
+	ajacentPos = append(ajacentPos, lc)
+	r1 := Position{x: seven.x + 1, y: seven.y}
+	r2 := Position{x: seven.x + 1, y: seven.y - 1}
+	rc := append(make([]Position, 0), r1, r2)
+	ajacentPos = append(ajacentPos, rc)
+	u1 := Position{x: seven.x - 1, y: seven.y - 2}
+	u2 := Position{x: seven.x - 1, y: seven.y - 2}
+	uc := append(make([]Position, 0), u1, u2)
+	ajacentPos = append(ajacentPos, uc)
+	d1 := Position{x: seven.x - 1, y: seven.y}
+	d2 := Position{x: seven.x, y: seven.y + 1}
+	dc := append(make([]Position, 0), d1, d2)
+	ajacentPos = append(ajacentPos, dc)
+	return ajacentPos
 }
 
 func main() {
@@ -116,6 +143,6 @@ func main() {
 	// fmt.Printf("%+v\n", findNextStates(initialState))
 	fmt.Println(initialState.Serilize())
 	for _, v := range findNextStates(initialState) {
-		fmt.Printf("%+v\n", v)
+		fmt.Printf("%+v\n", v.Serilize())
 	}
 }

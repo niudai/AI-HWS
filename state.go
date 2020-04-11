@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 const NumBlock = 21
 const Width = 5
 
@@ -31,15 +33,21 @@ func (s *State) Clone() *State {
 	return &c
 }
 
-// TODO: not tested
 func (s *State) Serilize() string {
-	str := make([]byte, 0)
+	str := ""
 	for i := 0; i < Width; i++ {
+		// i is row number
 		for j := 0; j < Width; j++ {
-			s.posNumber[Position{x: i, y: j}]
+			// j is column number, say, the x
+			str = str + strconv.Itoa(s.posNumber[Position{x: j, y: i}])
+			if j == Width-1 {
+				str = str + "\n"
+			} else {
+				str = str + ", "
+			}
 		}
 	}
-	return string(str)
+	return str
 }
 
 func HeuristicCost(a, b *State) int {
