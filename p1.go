@@ -65,10 +65,8 @@ func findNextStates(s *State) []*State {
 			}
 		}
 	}
-	// 7 part:
-	// sevenPos := findSevenAjacentPos(s.numberPos[7])
-	// var isValid bool = true
-	// s.posNumber[]
+	sevenPos := findSevenAjacentPos(s)
+	states = append(states, sevenPos...)
 	return states
 }
 
@@ -90,24 +88,85 @@ func findAjacentPos(p Position) []Position {
 }
 
 // TODO: not tested
-func findSevenAjacentPos(seven Position) [][]Position {
-	ajacentPos := make([][]Position, 0)
-	l1 := Position{x: seven.x - 1, y: seven.y}
-	l2 := Position{x: seven.x - 2, y: seven.y - 1}
-	lc := append(make([]Position, 0), l1, l2)
-	ajacentPos = append(ajacentPos, lc)
-	r1 := Position{x: seven.x + 1, y: seven.y}
-	r2 := Position{x: seven.x + 1, y: seven.y - 1}
-	rc := append(make([]Position, 0), r1, r2)
-	ajacentPos = append(ajacentPos, rc)
-	u1 := Position{x: seven.x - 1, y: seven.y - 2}
-	u2 := Position{x: seven.x - 1, y: seven.y - 2}
-	uc := append(make([]Position, 0), u1, u2)
-	ajacentPos = append(ajacentPos, uc)
-	d1 := Position{x: seven.x - 1, y: seven.y}
-	d2 := Position{x: seven.x, y: seven.y + 1}
-	dc := append(make([]Position, 0), d1, d2)
-	ajacentPos = append(ajacentPos, dc)
+func findSevenAjacentPos(state *State) []*State {
+	seven := state.numberPos[7]
+	ajacentPos := make([]*State, 0)
+	// go left
+	if seven.x-2 >= 0 {
+		l1 := Position{x: seven.x - 1, y: seven.y}
+		l2 := Position{x: seven.x - 2, y: seven.y - 1}
+		if state.posNumber[l1] == 0 && state.posNumber[l2] == 0 {
+			c := state.Clone()
+			// update new 7
+			c.posNumber[l1], c.posNumber[l2] = 7, 7
+			// update new 0
+			c.posNumber[seven], c.posNumber[Position{seven.x, seven.y - 1}] = 0, 0
+			// update new 7 position
+			c.numberPos[7] = Position{seven.x - 1, seven.y}
+			// update uniformCost
+			c.uniformCost++
+			// update zero pos
+			c.zeroPos = []Position{Position{seven.x, seven.y}, Position{seven.x, seven.y - 1}}
+			ajacentPos = append(ajacentPos, c)
+		}
+	}
+	// go right
+	if seven.x+1 < Width {
+		r1 := Position{x: seven.x + 1, y: seven.y}
+		r2 := Position{x: seven.x + 1, y: seven.y - 1}
+		if state.posNumber[r1] == 0 && state.posNumber[r2] == 0 {
+			c := state.Clone()
+			// update new 7
+			c.posNumber[r1], c.posNumber[r2] = 7, 7
+			// update new 0
+			c.posNumber[seven], c.posNumber[Position{seven.x - 1, seven.y - 1}] = 0, 0
+			// update new 7 position
+			c.numberPos[7] = Position{seven.x + 1, seven.y}
+			// update uniformCost
+			c.uniformCost++
+			// update zero pos
+			c.zeroPos = []Position{Position{seven.x, seven.y}, Position{seven.x - 1, seven.y - 1}}
+			ajacentPos = append(ajacentPos, c)
+		}
+	}
+	// go up
+	if seven.y-2 >= 0 {
+		u1 := Position{x: seven.x, y: seven.y - 2}
+		u2 := Position{x: seven.x - 1, y: seven.y - 2}
+		if state.posNumber[u1] == 0 && state.posNumber[u2] == 0 {
+			c := state.Clone()
+			// update new 7
+			c.posNumber[u1], c.posNumber[u2] = 7, 7
+			// update new 0
+			c.posNumber[seven], c.posNumber[Position{seven.x - 1, seven.y - 1}] = 0, 0
+			// update new 7 position
+			c.numberPos[7] = Position{seven.x, seven.y - 1}
+			// update uniformCost
+			c.uniformCost++
+			// update zero pos
+			c.zeroPos = []Position{Position{seven.x, seven.y}, Position{seven.x - 1, seven.y - 1}}
+			ajacentPos = append(ajacentPos, c)
+		}
+	}
+	// go down
+	if seven.y+1 < Width {
+		d1 := Position{x: seven.x - 1, y: seven.y}
+		d2 := Position{x: seven.x, y: seven.y + 1}
+		if state.posNumber[d1] == 0 && state.posNumber[d2] == 0 {
+			c := state.Clone()
+			// update new 7
+			c.posNumber[d1], c.posNumber[d2] = 7, 7
+			// update new 0
+			c.posNumber[Position{seven.x - 1, seven.y - 1}], c.posNumber[Position{seven.x, seven.y - 1}] = 0, 0
+			// update new 7 position
+			c.numberPos[7] = Position{seven.x, seven.y + 1}
+			// update uniformCost
+			c.uniformCost++
+			// update zero pos
+			c.zeroPos = []Position{Position{seven.x - 1, seven.y - 1}, Position{seven.x, seven.y - 1}}
+			ajacentPos = append(ajacentPos, c)
+		}
+	}
 	return ajacentPos
 }
 
