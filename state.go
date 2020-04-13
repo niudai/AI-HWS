@@ -19,6 +19,59 @@ type State struct {
 	uniformCost   int
 }
 
+type States []*State
+
+func (s States) Len() int {
+	return len(s)
+}
+
+// Less reports whether the element with
+// index i should sort before the element with index j.
+// Less(i, j int) bool
+// Swap swaps the elements with indexes i and j.
+// Swap(i, j int)
+
+// Untested
+func (s States) Less(i, j int) bool {
+	return s[i].uniformCost+s[i].heuristicCost < s[j].uniformCost+s[j].heuristicCost
+}
+
+// Untested
+func (s States) Swap(i, j int) {
+	tmp := s[i]
+	s[i] = s[j]
+	s[j] = tmp
+}
+
+// Untested
+// Push distinct state
+func (ss States) Push(i interface{}) {
+	s := i.(*State)
+	for _, _s := range ss {
+		if IsEqual(_s, s) {
+			return
+		}
+	}
+	ss = append(ss, s)
+}
+
+// Untested
+func (ss States) Pop() interface{} {
+	r := ss[len(ss)-1]
+	ss = ss[:len(ss)-1]
+	return r
+}
+
+// Untested
+func IsEqual(m, n *State) bool {
+	for i := 1; i <= NumBlock; i++ {
+		if m.numberPos[i] != n.numberPos[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *State) Clone() *State {
 	c := State{numberPos: make(map[int]Position), posNumber: make(map[Position]int), zeroPos: make([]Position, 2), heuristicCost: 0, uniformCost: 0}
 	for k, v := range s.numberPos {
@@ -31,6 +84,16 @@ func (s *State) Clone() *State {
 	c.heuristicCost = s.heuristicCost
 	c.uniformCost = s.uniformCost
 	return &c
+}
+
+// Untested
+func (ss States) Exist(s *State) bool {
+	for _, _s := range ss {
+		if _s == s {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *State) Serilize() string {

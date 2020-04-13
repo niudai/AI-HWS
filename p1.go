@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"container/list"
 	"fmt"
 	"os"
@@ -9,6 +10,8 @@ import (
 )
 
 var goalState *State
+var closeStates States
+var openStates States
 
 func isSameState(a, b []int) bool {
 	if len(a) != len(b) {
@@ -37,7 +40,7 @@ func buildState(nums []int) *State {
 }
 
 // TODO: not tested yet
-func findNextStates(s *State) []*State {
+func (s *State) findNextStates() []*State {
 	states := make([]*State, 0)
 	// not 7 part:
 	for _, p := range s.zeroPos {
@@ -172,7 +175,6 @@ func findSevenAjacentPos(state *State) []*State {
 
 func main() {
 	goal := []int{1, 2, 3, 4, 5, 7, 7, 8, 9, 10, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
-
 	f, _ := os.Open("p1.txt")
 	defer f.Close()
 	buf := make([]byte, 100)
@@ -200,8 +202,26 @@ func main() {
 	// fmt.Println(isSameState(num, num))
 	// fmt.Println(initialState.numberPos, "\n", initialState.heuristicCost, "\n", initialState.zeroPos)
 	// fmt.Printf("%+v\n", findNextStates(initialState))
+	closeStates = States{}
+	openStates = States{initialState}
 	fmt.Println(initialState.Serilize())
-	for _, v := range findNextStates(initialState) {
+	fmt.Println("Ajacent State:")
+	for _, v := range initialState.findNextStates() {
 		fmt.Printf("%+v\n", v.Serilize())
+		fmt.Printf("heuristicCost: %v uniformCost: %v\n", v.heuristicCost, v.uniformCost)
+	}
+	for {
+		cur := heap.Pop(openStates).(*State)
+		closeStates.Push(cur)
+		if IsEqual(cur, goalState) {
+			fmt.Println("I have reached to the Goal!!!")
+			break
+		}
+		for _, n := range cur.findNextStates() {
+			if !closeStates.Exist(n) {
+				// if not reached before
+				heap.Push(openStates, n)
+			}
+		}
 	}
 }
