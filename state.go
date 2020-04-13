@@ -17,12 +17,13 @@ type State struct {
 	// sevenPos  int
 	heuristicCost int
 	uniformCost   int
+	parentState   *State
 }
 
 type States []*State
 
-func (s States) Len() int {
-	return len(s)
+func (s *States) Len() int {
+	return len(*s)
 }
 
 // Less reports whether the element with
@@ -32,37 +33,37 @@ func (s States) Len() int {
 // Swap(i, j int)
 
 // Untested
-func (s States) Less(i, j int) bool {
-	return s[i].uniformCost+s[i].heuristicCost < s[j].uniformCost+s[j].heuristicCost
+func (s *States) Less(i, j int) bool {
+	return (*s)[i].uniformCost+(*s)[i].heuristicCost < (*s)[j].uniformCost+(*s)[j].heuristicCost
 }
 
 // Untested
-func (s States) Swap(i, j int) {
-	tmp := s[i]
-	s[i] = s[j]
-	s[j] = tmp
+func (s *States) Swap(i, j int) {
+	tmp := (*s)[i]
+	(*s)[i] = (*s)[j]
+	(*s)[j] = tmp
 }
 
 // Untested
 // Push distinct state
-func (ss States) Push(i interface{}) {
+func (ss *States) Push(i interface{}) {
 	s := i.(*State)
-	for _, _s := range ss {
+	for _, _s := range *ss {
 		if IsEqual(_s, s) {
 			return
 		}
 	}
-	ss = append(ss, s)
+	*ss = append(*ss, s)
 }
 
 // Untested
-func (ss States) Pop() interface{} {
-	r := ss[len(ss)-1]
-	ss = ss[:len(ss)-1]
+func (ss *States) Pop() interface{} {
+	r := (*ss)[len(*ss)-1]
+	*ss = (*ss)[:len(*ss)-1]
 	return r
 }
 
-// Untested
+// check two state if they are equal
 func IsEqual(m, n *State) bool {
 	for i := 1; i <= NumBlock; i++ {
 		if m.numberPos[i] != n.numberPos[i] {

@@ -26,7 +26,7 @@ func isSameState(a, b []int) bool {
 }
 
 func buildState(nums []int) *State {
-	state := State{numberPos: make(map[int]Position), heuristicCost: 0, posNumber: make(map[Position]int)}
+	state := State{numberPos: make(map[int]Position), heuristicCost: 0, uniformCost: 0, posNumber: make(map[Position]int)}
 	state.zeroPos = make([]Position, 0)
 	for i, v := range nums {
 		if v != 0 {
@@ -53,6 +53,8 @@ func (s *State) findNextStates() []*State {
 			// if p is not 7 or blank, exchange happens
 			if num != 7 && num != 0 {
 				c := s.Clone()
+				c.parentState = s
+
 				c.posNumber[p] = num
 				c.posNumber[p_] = 0
 				c.numberPos[num] = p
@@ -94,12 +96,14 @@ func findAjacentPos(p Position) []Position {
 func findSevenAjacentPos(state *State) []*State {
 	seven := state.numberPos[7]
 	ajacentPos := make([]*State, 0)
+	var c *State = new(State)
+	c.parentState = state
 	// go left
 	if seven.x-2 >= 0 {
 		l1 := Position{x: seven.x - 1, y: seven.y}
 		l2 := Position{x: seven.x - 2, y: seven.y - 1}
 		if state.posNumber[l1] == 0 && state.posNumber[l2] == 0 {
-			c := state.Clone()
+			c = state.Clone()
 			// update new 7
 			c.posNumber[l1], c.posNumber[l2] = 7, 7
 			// update new 0
@@ -118,7 +122,7 @@ func findSevenAjacentPos(state *State) []*State {
 		r1 := Position{x: seven.x + 1, y: seven.y}
 		r2 := Position{x: seven.x + 1, y: seven.y - 1}
 		if state.posNumber[r1] == 0 && state.posNumber[r2] == 0 {
-			c := state.Clone()
+			c = state.Clone()
 			// update new 7
 			c.posNumber[r1], c.posNumber[r2] = 7, 7
 			// update new 0
@@ -137,7 +141,7 @@ func findSevenAjacentPos(state *State) []*State {
 		u1 := Position{x: seven.x, y: seven.y - 2}
 		u2 := Position{x: seven.x - 1, y: seven.y - 2}
 		if state.posNumber[u1] == 0 && state.posNumber[u2] == 0 {
-			c := state.Clone()
+			c = state.Clone()
 			// update new 7
 			c.posNumber[u1], c.posNumber[u2] = 7, 7
 			// update new 0
@@ -156,7 +160,7 @@ func findSevenAjacentPos(state *State) []*State {
 		d1 := Position{x: seven.x - 1, y: seven.y}
 		d2 := Position{x: seven.x, y: seven.y + 1}
 		if state.posNumber[d1] == 0 && state.posNumber[d2] == 0 {
-			c := state.Clone()
+			c = state.Clone()
 			// update new 7
 			c.posNumber[d1], c.posNumber[d2] = 7, 7
 			// update new 0
@@ -173,10 +177,19 @@ func findSevenAjacentPos(state *State) []*State {
 	return ajacentPos
 }
 
+func PrintPath(p *State, result *os.File) {
+	for p != nil {
+		fmt.Fprintln(result, p.Serilize())
+		p = p.parentState
+	}
+}
+
 func main() {
-	goal := []int{1, 2, 3, 4, 5, 7, 7, 8, 9, 10, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
+	goal := []int{1, 2, 3, 4, 5, 7, 7, 8, 9, 10, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 0, 0}
 	f, _ := os.Open("p1.txt")
+	resultF, _ := os.OpenFile("result.txt", os.O_RDWR, 0755)
 	defer f.Close()
+	defer resultF.Close()
 	buf := make([]byte, 100)
 	n, err := f.Read(buf)
 	if err != nil {
@@ -204,23 +217,28 @@ func main() {
 	// fmt.Printf("%+v\n", findNextStates(initialState))
 	closeStates = States{}
 	openStates = States{initialState}
-	fmt.Println(initialState.Serilize())
-	fmt.Println("Ajacent State:")
+	// fmt.Println(initialState.Serilize())
+	// fmt.Println("Ajacent State:")
 	for _, v := range initialState.findNextStates() {
 		fmt.Printf("%+v\n", v.Serilize())
 		fmt.Printf("heuristicCost: %v uniformCost: %v\n", v.heuristicCost, v.uniformCost)
 	}
+	// fmt.Println((IsEqual(goalState, initialState)))
+	heap.Init(&openStates)
+	// heap.Push(openStates, initialState)
+	// fmt.Println(heap.Pop(&openStates).(*State).Serilize())
 	for {
-		cur := heap.Pop(openStates).(*State)
+		cur := heap.Pop(&openStates).(*State)
 		closeStates.Push(cur)
 		if IsEqual(cur, goalState) {
 			fmt.Println("I have reached to the Goal!!!")
+			PrintPath(cur, resultF)
 			break
 		}
 		for _, n := range cur.findNextStates() {
 			if !closeStates.Exist(n) {
 				// if not reached before
-				heap.Push(openStates, n)
+				heap.Push(&openStates, n)
 			}
 		}
 	}
