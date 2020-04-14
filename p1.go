@@ -2,8 +2,10 @@ package main
 
 import (
 	"container/heap"
-	"container/list"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -173,11 +175,71 @@ func findSevenAjacentPos(state *State) []*State {
 	return ajacentPos
 }
 
-func PrintPath(p *State, result *os.File) {
+func PrintPath(p *State, result io.Writer) {
 	for p != nil {
 		fmt.Fprintln(result, p.Serilize())
 		p = p.parentState
 	}
+}
+
+type StrState struct {
+	state string
+}
+
+func P1(w http.ResponseWriter, r *http.Request) {
+	goal := []int{1, 2, 3, 4, 5, 7, 7, 8, 9, 10, 6, 7, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 0, 0}
+	// f, _ := os.Open("p1.txt")
+	defer r.Body.Close()
+	// buf := make([]byte, 200)
+	// buf, err := ioutil.ReadAll(r.Body)
+	str := r.URL.Query().Get("initial")
+	// n, err := r.Body.Read(buf)
+	r.ParseForm()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// str := string(buf)
+	// str = strings.Replace(str, "\n", ",", -1)
+	var numStr []string = strings.Split(str, ",")
+	var num []int = make([]int, len(numStr))
+	for i, s := range numStr {
+		n, _ := strconv.ParseInt(s, 10, 32)
+		num[i] = int(n)
+	}
+	initialState := buildState(num)
+	goalState = buildState(goal)
+	initialState.heuristicCost = HeuristicCost(initialState, goalState)
+	initialState.uniformCost = 0
+	closeStates = States{}
+	openStates = States{initialState}
+	heap.Init(&openStates)
+	if r.Method == "GET" {
+		log.Println("SOLOVING P1...")
+		for {
+			cur := heap.Pop(&openStates).(*State)
+			closeStates.Push(cur)
+			if IsEqual(cur, goalState) {
+				fmt.Println("I have reached to the Goal!!!")
+				PrintPath(cur, w)
+				break
+			}
+			for _, n := range cur.findNextStates() {
+				if !closeStates.Exist(n) {
+					// if not reached before
+					heap.Push(&openStates, n)
+				}
+			}
+		}
+
+	}
+}
+
+func Index(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "index.html")
+}
+
+func Js(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "index.js")
 }
 
 func main() {
@@ -199,43 +261,18 @@ func main() {
 		n, _ := strconv.ParseInt(s, 10, 32)
 		num[i] = int(n)
 	}
-	// fmt.Println(goal)
-	// fmt.Println(num)
-	l := list.New()
-	l.PushBack(goal)
-	l.PushBack(num)
 	initialState := buildState(num)
 	goalState = buildState(goal)
 	initialState.heuristicCost = HeuristicCost(initialState, goalState)
 	initialState.uniformCost = 0
-	// fmt.Println(isSameState(num, num))
-	// fmt.Println(initialState.numberPos, "\n", initialState.heuristicCost, "\n", initialState.zeroPos)
-	// fmt.Printf("%+v\n", findNextStates(initialState))
 	closeStates = States{}
 	openStates = States{initialState}
-	// fmt.Println(initialState.Serilize())
-	// fmt.Println("Ajacent State:")
-	// for _, v := range initialState.findNextStates() {
-	// 	fmt.Printf("%+v\n", v.Serilize())
-	// 	fmt.Printf("heuristicCost: %v uniformCost: %v\n", v.heuristicCost, v.uniformCost)
-	// }
-	// fmt.Println((IsEqual(goalState, initialState)))
 	heap.Init(&openStates)
-	// heap.Push(openStates, initialState)
-	// fmt.Println(heap.Pop(&openStates).(*State).Serilize())
-	for {
-		cur := heap.Pop(&openStates).(*State)
-		closeStates.Push(cur)
-		if IsEqual(cur, goalState) {
-			fmt.Println("I have reached to the Goal!!!")
-			PrintPath(cur, resultF)
-			break
-		}
-		for _, n := range cur.findNextStates() {
-			if !closeStates.Exist(n) {
-				// if not reached before
-				heap.Push(&openStates, n)
-			}
-		}
+	http.HandleFunc("/ai/exp1", P1)
+	http.HandleFunc("/", Index)
+	http.HandleFunc("/index.js", Js)
+	err = http.ListenAndServe(":9090", nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
 	}
 }
