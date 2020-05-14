@@ -5,9 +5,26 @@ import "strconv"
 const NumBlock = 21
 const Width = 5
 
+const (
+	UP    = "UP"
+	DOWN  = "DOWN"
+	LEFT  = "LEFT"
+	RIGHT = "RIGHT"
+)
+
 type Position struct {
 	x int
 	y int
+}
+
+type PositionWithT struct {
+	Position
+	Transition
+}
+
+type Transition struct {
+	number    int
+	direction string
 }
 
 type State struct {
@@ -18,6 +35,7 @@ type State struct {
 	heuristicCost int
 	uniformCost   int
 	parentState   *State
+	transition    Transition
 }
 
 type States []*State
@@ -87,10 +105,10 @@ func (s *State) Clone() *State {
 	return &c
 }
 
-// Untested
+// Tested
 func (ss States) Exist(s *State) bool {
 	for _, _s := range ss {
-		if _s == s {
+		if IsEqual(_s, s) {
 			return true
 		}
 	}
